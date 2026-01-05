@@ -34,6 +34,9 @@ export interface Member {
   membershipStatus: 'Basic' | 'Premium';
   email: string;
   progress?: ProgressEntry[];
+  status?: 'Active' | 'Archived';
+  archiveReason?: string;
+  archivedAt?: string;
 }
 
 export interface Payment {
@@ -68,4 +71,4 @@ export interface Notice {
   priority: 'High' | 'Normal';
 }
 
-export type View = 'dashboard' | 'catalog' | 'members' | 'ai-assistant' | 'payments' | 'batch' | 'attendance' | 'progress';
+export type View = 'dashboard' | 'catalog' | 'members' | 'ai-assistant' | 'payments' | 'batch' | 'attendance' | 'progress' | 'history';

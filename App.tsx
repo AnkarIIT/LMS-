@@ -10,6 +10,7 @@ import Payments from './components/Payments';
 import Batches from './components/Batches';
 import Attendance from './components/Attendance';
 import ProgressTracker from './components/ProgressTracker';
+import History from './components/History';
 import { dbService, isDbConfigured } from './services/dbService';
 
 const App: React.FC = () => {
@@ -17,7 +18,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [dbStatus, setDbStatus] = useState<'connected' | 'local' | 'error'>('local');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
+
   const [resources, setResources] = useState<Resource[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -36,7 +37,7 @@ const App: React.FC = () => {
           setDbStatus('local');
           throw new Error("SUPABASE_ANON_KEY is missing. Operating in Local Mode.");
         }
-        
+
         const [m, r, p, a, n] = await Promise.all([
           dbService.getMembers(),
           dbService.getResources(),
@@ -44,7 +45,7 @@ const App: React.FC = () => {
           dbService.getAttendance(),
           dbService.getNotices()
         ]);
-        
+
         setMembers(m);
         setResources(r);
         setPayments(p);
@@ -54,7 +55,7 @@ const App: React.FC = () => {
       } catch (err: any) {
         const msg = err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
         console.warn("Database Sync Notice:", msg);
-        
+
         // If it's just a missing config, we don't treat it as a scary error
         if (msg.includes("Config Not Found") || msg.includes("missing") || msg.includes("Invalid API key")) {
           setDbStatus('local');
@@ -62,7 +63,7 @@ const App: React.FC = () => {
           setDbStatus('error');
           setErrorMessage(msg);
         }
-        
+
         // Fallback to local storage
         const savedMembers = localStorage.getItem('vidya_members');
         const savedResources = localStorage.getItem('vidya_resources');
@@ -91,8 +92,8 @@ const App: React.FC = () => {
         await dbService.upsertMember(updatedMember);
         if (updatedMember.progress && updatedMember.progress.length > 0) {
           const latest = updatedMember.progress[updatedMember.progress.length - 1];
-          if (latest.id.length > 12) { 
-             await dbService.addProgress(updatedMember.id, latest);
+          if (latest.id.length > 12) {
+            await dbService.addProgress(updatedMember.id, latest);
           }
         }
       }
@@ -165,15 +166,35 @@ const App: React.FC = () => {
 
   const handleAddMember = async (m: Omit<Member, 'id'>) => {
     try {
-      const email = `${m.name.toLowerCase().replace(/\s+/g, '.')}@vidya.com`;
+      // Members.tsx now handles email generation (manual or auto-unique)
+      const email = m.email || `${m.name.toLowerCase().replace(/\s+/g, '.')}.${Date.now().toString().slice(-4)}@vidya.com`;
+
       if (dbStatus === 'connected') {
-        const saved = await dbService.upsertMember({ ...m, email });
-        if (saved) setMembers(prev => [...prev, { ...m, id: saved.id, email }]);
+        const saved = await dbService.upsertMember({ ...m, email, status: 'Active' });
+        if (saved) setMembers(prev => [...prev, { ...m, id: saved.id, email, status: 'Active' }]);
       } else {
-        setMembers(prev => [...prev, { ...m, id: 'mem-' + Date.now(), email }]);
+        setMembers(prev => [...prev, { ...m, id: 'mem-' + Date.now(), email, status: 'Active' }]);
       }
     } catch (err) {
       console.error("Member creation sync error:", err);
+    }
+  };
+
+  const handleArchiveMember = async (id: string, reason: string) => {
+    try {
+      setMembers(prev => prev.map(m => m.id === id ? { ...m, status: 'Archived', archiveReason: reason, archivedAt: new Date().toISOString() } : m));
+      if (dbStatus === 'connected') await dbService.archiveMember(id, reason);
+    } catch (err) {
+      console.error("Archive error:", err);
+    }
+  };
+
+  const handleRestoreMember = async (id: string) => {
+    try {
+      setMembers(prev => prev.map(m => m.id === id ? { ...m, status: 'Active', archiveReason: undefined, archivedAt: undefined } : m));
+      if (dbStatus === 'connected') await dbService.restoreMember(id);
+    } catch (err) {
+      console.error("Restore error:", err);
     }
   };
 
@@ -200,40 +221,38 @@ const App: React.FC = () => {
             </p>
           </div>
         )}
-        
+
         {(() => {
           switch (currentView) {
-            case 'dashboard': 
-              return <Dashboard 
-                resources={resources} members={members} 
-                payments={payments} notices={notices} 
-                onExport={() => {}} onImport={() => {}}
+            case 'dashboard':
+              return <Dashboard
+                resources={resources} members={members.filter(m => m.status !== 'Archived')}
+                payments={payments} notices={notices}
+                onExport={() => { }} onImport={() => { }}
               />;
-            case 'catalog': return <Catalog 
-                resources={resources} 
-                accessLogs={accessLogs} 
-                onAdd={addResource} 
-                onAccess={handleResourceAccess}
-                onRemove={removeResource} 
-              />;
-            case 'members': 
-              return <Members 
-                members={members} payments={payments} 
-                onAddMember={handleAddMember} 
-                onDeleteMember={async (id) => {
-                  try {
-                    setMembers(members.filter(m => m.id !== id));
-                    if (dbStatus === 'connected') await dbService.deleteMember(id);
-                  } catch(e) { console.error(e); }
-                }}
+            case 'catalog': return <Catalog
+              resources={resources}
+              accessLogs={accessLogs}
+              onAdd={addResource}
+              onAccess={handleResourceAccess}
+              onRemove={removeResource}
+            />;
+            case 'members':
+              return <Members
+                members={members.filter(m => m.status !== 'Archived')}
+                payments={payments}
+                onAddMember={handleAddMember}
+                onArchiveMember={handleArchiveMember}
                 onUpdateMember={updateMember}
               />;
+            case 'history':
+              return <History members={members} onRestore={handleRestoreMember} />;
             case 'progress': return <ProgressTracker members={members} onUpdateMember={updateMember} />;
             case 'batch': return <Batches members={members} />;
             case 'payments': return <Payments members={members} payments={payments} onPay={handlePayment} />;
             case 'ai-assistant': return <AIAssistant resources={resources} members={members} logs={accessLogs} />;
             case 'attendance': return <Attendance members={members} attendance={attendance} onUpdate={handleAttendance} />;
-            default: return <Dashboard resources={resources} members={members} payments={payments} notices={notices} onExport={() => {}} onImport={() => {}} />;
+            default: return <Dashboard resources={resources} members={members} payments={payments} notices={notices} onExport={() => { }} onImport={() => { }} />;
           }
         })()}
       </div>
@@ -249,12 +268,10 @@ const App: React.FC = () => {
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 uppercase leading-none">Vidya Library</h1>
             <p className="text-[10px] text-slate-400 font-bold tracking-[0.2em] uppercase mt-1.5">Registry Node • Mohanpur Bazar</p>
           </div>
-          <div className={`flex items-center space-x-2 px-4 py-2 rounded-xl border text-xs font-bold transition-all ${
-            dbStatus === 'connected' ? 'bg-white border-slate-200 text-slate-500' : 'bg-emerald-50 border-emerald-100 text-emerald-600'
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${
-              dbStatus === 'connected' ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-400'
-            }`}></span>
+          <div className={`flex items-center space-x-2 px-4 py-2 rounded-xl border text-xs font-bold transition-all ${dbStatus === 'connected' ? 'bg-white border-slate-200 text-slate-500' : 'bg-emerald-50 border-emerald-100 text-emerald-600'
+            }`}>
+            <span className={`w-2 h-2 rounded-full ${dbStatus === 'connected' ? 'bg-emerald-500 animate-pulse' : 'bg-emerald-400'
+              }`}></span>
             <span>{dbStatus === 'connected' ? 'Cloud Integrated' : 'Local Registry Active'}</span>
           </div>
         </header>

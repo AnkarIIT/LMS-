@@ -2,16 +2,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { Member, Resource, Payment, AccessLog, AttendanceLog, Notice, ProgressEntry } from '../types';
 
-// Detect environment variables from process.env
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://vtysxdqqgbqbremdcvce.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+// Detect environment variables from import.meta.env (Vite)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://vtysxdqqgbqbremdcvce.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 // Create client only if key is available
-export const isDbConfigured = SUPABASE_ANON_KEY.length > 0 && 
-                             SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY_HERE' && 
-                             SUPABASE_ANON_KEY !== 'public-anon-key-placeholder';
+export const isDbConfigured = SUPABASE_ANON_KEY.length > 0 &&
+  SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY_HERE' &&
+  SUPABASE_ANON_KEY !== 'public-anon-key-placeholder';
 
-export const supabase = isDbConfigured 
+export const supabase = isDbConfigured
   ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 
@@ -28,9 +28,9 @@ export const dbService = {
     const { data, error } = await supabase
       .from('members')
       .select('*, progress(*)');
-    
+
     if (error) return handleError(error, 'getMembers');
-    
+
     return (data || []).map(m => ({
       ...m,
       fatherName: m.father_name,
@@ -48,9 +48,13 @@ export const dbService = {
   },
 
   async upsertMember(member: Partial<Member>) {
-    if (!supabase) return null;
-    const dbPayload = {
-      id: member.id,
+    if (!supabase) {
+      console.error("Database Client not initialized");
+      return null;
+    }
+
+    // Prepare payload
+    const dbPayload: any = {
       name: member.name,
       father_name: member.fatherName,
       address: member.address,
@@ -63,8 +67,31 @@ export const dbService = {
       membership_status: member.membershipStatus,
       email: member.email
     };
-    const { data, error } = await supabase.from('members').upsert(dbPayload).select();
-    if (error) return handleError(error, 'upsertMember');
+
+    // If ID exists, include it (Update/Upsert)
+    if (member.id && !member.id.startsWith('mem-')) {
+      dbPayload.id = member.id;
+    }
+
+    console.log("Saving Member Payload:", dbPayload);
+
+    let result;
+    if (dbPayload.id) {
+      // Update existing
+      result = await supabase.from('members').upsert(dbPayload).select();
+    } else {
+      // Insert new
+      result = await supabase.from('members').insert([dbPayload]).select();
+    }
+
+    const { data, error } = result;
+
+    if (error) {
+      console.error("Supabase Save Error:", error);
+      return handleError(error, 'upsertMember');
+    }
+
+    console.log("Supabase Save Success:", data);
     return data ? data[0] : null;
   },
 
@@ -169,6 +196,28 @@ export const dbService = {
     }).select();
     if (error) return handleError(error, 'upsertAttendance');
     return data ? data[0] : null;
+  },
+
+  async archiveMember(id: string, reason: string) {
+    if (!supabase) return null;
+    const { error } = await supabase.from('members').update({
+      status: 'Archived',
+      archive_reason: reason,
+      archived_at: new Date().toISOString()
+    }).eq('id', id);
+    if (error) return handleError(error, 'archiveMember');
+    return true;
+  },
+
+  async restoreMember(id: string) {
+    if (!supabase) return null;
+    const { error } = await supabase.from('members').update({
+      status: 'Active',
+      archive_reason: null,
+      archived_at: null
+    }).eq('id', id);
+    if (error) return handleError(error, 'restoreMember');
+    return true;
   },
 
   // Notices

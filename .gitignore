@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local Config
+.env
+
+# Scripts with potential secrets
+scripts/
