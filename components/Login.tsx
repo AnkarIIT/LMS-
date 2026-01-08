@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Member } from '../types';
+import { dbService } from '../services/dbService';
 
 interface LoginProps {
   onLogin: (role: 'admin' | 'student', student?: Member) => void;
@@ -14,7 +15,7 @@ const ADMIN_CONFIG = {
 
 const Login: React.FC<LoginProps> = ({ onLogin, members }) => {
   const [mode, setMode] = useState<'selection' | 'student-login' | 'admin-login'>('selection');
-  const [uuid, setUuid] = useState('');
+  const [studentEmail, setStudentEmail] = useState('');
   const [password, setPassword] = useState('');
   const [adminId, setAdminId] = useState('');
   const [adminPass, setAdminPass] = useState('');
@@ -34,17 +35,23 @@ const Login: React.FC<LoginProps> = ({ onLogin, members }) => {
 
   const BRAND_COLOR = "#84cc16"; // Unified Vidya Green
 
-  const handleStudentLogin = (e: React.FormEvent) => {
+  const handleStudentLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const student = members.find(m =>
-      m.id.toLowerCase() === uuid.trim().toLowerCase() &&
-      (m.password === password || (!m.password && password === 'vidya123'))
-    );
+    setError('');
+    setIsLoading(true);
 
-    if (student) {
-      onLogin('student', student);
-    } else {
-      setError('Access Denied: Invalid Student UUID or Password.');
+    try {
+      const student = await dbService.getMemberByEmail(studentEmail);
+
+      if (student && (student.password === password || (!student.password && password === 'vidya123'))) {
+        onLogin('student', student);
+      } else {
+        setError('Access Denied: Invalid Student Email or Password.');
+      }
+    } catch (err: any) {
+      setError(`Auth Error: ${err.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -252,7 +259,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, members }) => {
 
               <div className="space-y-2">
                 <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-                  {mode === 'admin-login' ? 'Vault Credentials' : 'Member ID Access'}
+                  {mode === 'admin-login' ? 'Vault Credentials' : 'Member Email Access'}
                 </h3>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Encrypted Authentication Required</p>
               </div>
@@ -260,14 +267,14 @@ const Login: React.FC<LoginProps> = ({ onLogin, members }) => {
               <form onSubmit={mode === 'admin-login' ? handleAdminCredentials : handleStudentLogin} className="space-y-5">
                 <div className="space-y-4">
                   <div className="group">
-                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1 transition-colors group-focus-within:text-[#84cc16]">Identification ID</label>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1 transition-colors group-focus-within:text-[#84cc16]">Email Address</label>
                     <input
                       required
-                      type={mode === 'admin-login' ? 'email' : 'text'}
-                      placeholder={mode === 'admin-login' ? 'admin@vidyalibrary.com' : 'S-UUID-001'}
+                      type="email"
+                      placeholder={mode === 'admin-login' ? 'admin@vidyalibrary.com' : 'student@example.com'}
                       className="w-full p-5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-3xl text-sm font-bold dark:text-white outline-none focus:ring-4 focus:ring-[#84cc16]/10 focus:border-[#84cc16] transition-all"
-                      value={mode === 'admin-login' ? adminId : uuid}
-                      onChange={e => mode === 'admin-login' ? setAdminId(e.target.value) : setUuid(e.target.value)}
+                      value={mode === 'admin-login' ? adminId : studentEmail}
+                      onChange={e => mode === 'admin-login' ? setAdminId(e.target.value) : setStudentEmail(e.target.value)}
                     />
                   </div>
                   <div className="group">

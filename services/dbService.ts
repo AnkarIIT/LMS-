@@ -59,6 +59,21 @@ export const dbService = {
     return (data || []).map(mapMember);
   },
 
+  async getMemberByEmail(email: string): Promise<Member | null> {
+    if (!supabase) throw new Error("Cloud Database Not Configured");
+    const { data, error } = await supabase
+      .from('members')
+      .select('*, progress(*)')
+      .eq('email', email)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null; // No record found
+      return handleError(error, 'getMemberByEmail');
+    }
+    return data ? mapMember(data) : null;
+  },
+
   async upsertMember(member: Partial<Member>) {
     if (!supabase) return null;
     const id = member.id || generateUUID();
