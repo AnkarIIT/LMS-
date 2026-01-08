@@ -29,14 +29,43 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ student, notices, a
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* Welcome Hero */}
-      <div className="bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl">
+      <div className="bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl group">
         <div className="relative z-10">
           <p className="text-[#84cc16] font-black text-[10px] uppercase tracking-[0.3em] mb-2">Student Hub Portal</p>
           <h2 className="text-4xl font-black tracking-tighter uppercase italic">Namaste, {student.name.split(' ')[0]}!</h2>
-          <p className="text-slate-400 text-sm mt-2 max-w-md font-medium">
+          <p className="text-slate-400 text-sm mt-2 max-w-md font-medium leading-relaxed">
             Your seat <span className="text-white font-bold">#{student.seatNo}</span> is ready for your study session in the <span className="text-white font-bold">{student.batchTime}</span> shift.
           </p>
         </div>
+
+        {/* Dynamic Library Animation in Hero */}
+        <div className="absolute right-10 top-1/2 -translate-y-1/2 opacity-20 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none hidden md:block">
+          <div className="relative w-48 h-48 flex items-center justify-center">
+            {/* Pulsing Aura */}
+            <div className="absolute inset-0 bg-[#84cc16]/20 blur-[50px] rounded-full animate-pulse"></div>
+
+            <svg className="w-40 h-40 text-[#84cc16] animate-bounce" style={{ animationDuration: '4s' }} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M4 4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2H20V17H6.5C5.83696 17 5.20107 17.2634 4.73223 17.7322C4.26339 18.2011 4 18.837 4 19.5V4.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 21V7" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+            </svg>
+
+            {/* Floating Knowledge Dots */}
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-1 h-1 bg-[#84cc16] rounded-full animate-ping"
+                style={{
+                  left: `${20 + Math.random() * 60}%`,
+                  top: `${20 + Math.random() * 60}%`,
+                  animationDelay: `${i * 0.5}s`,
+                  animationDuration: '3s'
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
         <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#84cc16]/10 rounded-full blur-[100px]"></div>
       </div>
 
@@ -132,8 +161,8 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ student, notices, a
                         {req.requestedBatch ? `Batch Shift` : ''}
                       </p>
                       <span className={`text-[8px] font-black px-2 py-0.5 rounded-md uppercase ${req.status === 'Approved' ? 'bg-[#84cc16]/20 text-[#84cc16]' :
-                          req.status === 'Rejected' ? 'bg-rose-100 text-rose-600' :
-                            'bg-slate-100 text-slate-600'
+                        req.status === 'Rejected' ? 'bg-rose-100 text-rose-600' :
+                          'bg-slate-100 text-slate-600'
                         }`}>
                         {req.status}
                       </span>

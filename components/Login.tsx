@@ -23,13 +23,13 @@ const Login: React.FC<LoginProps> = ({ onLogin, members }) => {
 
   // Stabilized Thematic System (Branding consistency)
   const portalArt = useMemo(() => {
+    // Highly-curated library theme prioritized for user request
     const subjects = [
-      { id: 'TIME', title: 'CHRONOS' },
-      { id: 'STUDY', title: 'ARCHIVE' },
-      { id: 'GROWTH', title: 'NEXUS' },
-      { id: 'SECURITY', title: 'VAULT' }
+      { id: 'STUDY', title: 'ARCHIVE', accent: '#84cc16' },
+      { id: 'GROWTH', title: 'NEXUS', accent: '#84cc16' }
     ];
-    return subjects[Math.floor(Math.random() * subjects.length)];
+    // Return STUDY mostly to ensure they see the library animation
+    return subjects[0];
   }, []);
 
   const BRAND_COLOR = "#84cc16"; // Unified Vidya Green
@@ -68,11 +68,18 @@ const Login: React.FC<LoginProps> = ({ onLogin, members }) => {
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes float-gentle { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } }
         @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.2); opacity: 0; } }
-        @keyframes line-draw { 0% { height: 0; opacity: 0; } 100% { height: 100%; opacity: 0.2; } }
+        @keyframes line-draw { 0% { height: 0; opacity: 0; } 100% { height: var(--h); opacity: 0.2; } }
+        @keyframes line-pulse { 0%, 100% { opacity: 0.15; transform: scaleY(1); } 50% { opacity: 0.4; transform: scaleY(1.05); } }
+        @keyframes knowledge-drift { 0% { transform: translate(0, 0) scale(1); opacity: 0; } 20% { opacity: 0.8; } 100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; } }
+        @keyframes page-shimmer { 0% { fill-opacity: 0.3; } 50% { fill-opacity: 0.8; } 100% { fill-opacity: 0.3; } }
+        @keyframes global-glow { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.25; } }
         .animate-spin-slow { animation: spin-slow 30s linear infinite; }
         .animate-float-gentle { animation: float-gentle 6s ease-in-out infinite; }
         .animate-pulse-ring { animation: pulse-ring 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        .animate-grow { animation: line-draw 1.5s ease-out forwards; }
+        .animate-grow-loop { animation: line-draw 1.5s ease-out forwards, line-pulse 3s ease-in-out 1.5s infinite; }
+        .knowledge-particle { animation: knowledge-drift 4s infinite linear; }
+        .page-glow { animation: page-shimmer 3s ease-in-out infinite; }
+        .global-pulse { animation: global-glow 5s ease-in-out infinite; }
       `}</style>
 
       <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 bg-white dark:bg-slate-900 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] overflow-hidden border border-slate-100 dark:border-slate-800 relative z-10 transition-all duration-500">
@@ -89,12 +96,41 @@ const Login: React.FC<LoginProps> = ({ onLogin, members }) => {
               </div>
             )}
             {portalArt.id === 'STUDY' && (
-              <div className="relative w-80 h-80 flex items-center justify-center animate-float-gentle">
-                <svg className="w-48 h-48 opacity-40 text-[#84cc16]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5">
-                  <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <div className="absolute inset-0 border-2 border-[#84cc16]/5 rounded-3xl rotate-12"></div>
-                <div className="absolute inset-0 border-2 border-[#84cc16]/5 rounded-3xl -rotate-6"></div>
+              <div className="relative w-80 h-80 flex items-center justify-center">
+                {/* Floating Knowledge Particles */}
+                {[...Array(12)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-1 h-1 bg-[#84cc16] rounded-full knowledge-particle"
+                    style={{
+                      '--x': `${(Math.random() - 0.5) * 200}px`,
+                      '--y': `${-150 - Math.random() * 100}px`,
+                      left: '50%',
+                      top: '50%',
+                      animationDelay: `${Math.random() * 4}s`
+                    } as any}
+                  />
+                ))}
+
+                <div className="relative animate-float-gentle">
+                  <svg className="w-56 h-56 text-[#84cc16]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Book Base */}
+                    <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M4 4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2H20V17H6.5C5.83696 17 5.20107 17.2634 4.73223 17.7322C4.26339 18.2011 4 18.837 4 19.5V4.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+
+                    {/* Glowing Pages */}
+                    <path d="M12 21V7" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+                    <path className="page-glow" d="M12 7C12 7 14 5 18 5V15C14 15 12 17 12 17" fill="currentColor" fillOpacity="0.2" />
+                    <path className="page-glow" d="M12 7C12 7 10 5 6 5V15C10 15 12 17 12 17" fill="currentColor" fillOpacity="0.2" style={{ animationDelay: '1.5s' }} />
+                  </svg>
+
+                  {/* Aura Effect */}
+                  <div className="absolute inset-0 bg-[#84cc16]/20 blur-[60px] rounded-full scale-75 animate-pulse"></div>
+                </div>
+
+                {/* Geometric Accents */}
+                <div className="absolute inset-0 border-2 border-[#84cc16]/5 rounded-full rotate-45 scale-110"></div>
+                <div className="absolute inset-0 border-[1px] border-[#84cc16]/10 rounded-full -rotate-12 scale-125 border-dashed"></div>
               </div>
             )}
             {portalArt.id === 'SECURITY' && (
@@ -107,21 +143,41 @@ const Login: React.FC<LoginProps> = ({ onLogin, members }) => {
               </div>
             )}
             {portalArt.id === 'GROWTH' && (
-              <div className="flex items-end space-x-6 h-64">
+              <div className="flex items-end space-x-6 h-64 relative">
                 {[40, 70, 50, 90, 60, 80].map((h, i) => (
-                  <div key={i} className="w-4 bg-[#84cc16]/20 rounded-t-lg animate-grow" style={{ height: `${h}%`, animationDelay: `${i * 0.1}s` }}></div>
+                  <div
+                    key={i}
+                    className="w-4 bg-[#84cc16] rounded-t-lg animate-grow-loop origin-bottom"
+                    style={{ '--h': `${h}%`, height: `0%`, animationDelay: `${i * 0.1}s` } as any}
+                  ></div>
+                ))}
+                {/* Floating particles also for growth */}
+                {[...Array(8)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-1 h-1 bg-[#84cc16] rounded-full knowledge-particle"
+                    style={{
+                      '--x': `${(Math.random() - 0.5) * 150}px`,
+                      '--y': `${-100 - Math.random() * 80}px`,
+                      left: `${20 + Math.random() * 60}%`,
+                      bottom: '0',
+                      animationDelay: `${Math.random() * 4}s`
+                    } as any}
+                  />
                 ))}
               </div>
             )}
           </div>
 
+          <div className="absolute inset-0 global-pulse bg-gradient-to-tr from-[#84cc16]/5 to-transparent pointer-events-none"></div>
+
           <div className="relative z-10">
-            <div className="flex items-center space-x-3 mb-10 translate-y-[-10px]">
-              <div className="p-2 bg-white/5 rounded-2xl backdrop-blur-md border border-white/10 shadow-2xl">
-                <img src="https://image2url.com/r2/default/images/1767537268702-ace32085-6e35-4209-afed-54ffee4bfb6b.jpeg" alt="Vidya" className="w-10 h-10 rounded-xl object-cover ring-1 ring-[#84cc16]/50" />
+            <div className="flex items-center space-x-3 mb-10 translate-y-[-10px] group/logo">
+              <div className="p-2 bg-white/5 rounded-2xl backdrop-blur-md border border-white/10 shadow-2xl group-hover/logo:border-[#84cc16]/50 transition-colors">
+                <img src="https://image2url.com/r2/default/images/1767537268702-ace32085-6e35-4209-afed-54ffee4bfb6b.jpeg" alt="Vidya" className="w-10 h-10 rounded-xl object-cover ring-1 ring-[#84cc16]/50 group-hover/logo:scale-110 transition-transform" />
               </div>
               <div>
-                <h1 className="text-xl font-black uppercase tracking-tighter text-white">Vidya Library</h1>
+                <h1 className="text-xl font-black uppercase tracking-tighter text-white group-hover/logo:text-[#84cc16] transition-colors">Vidya Library</h1>
                 <p className="text-[8px] font-black text-[#84cc16] uppercase tracking-[0.4em] ml-0.5 mt-0.5">Systems Node v2.0</p>
               </div>
             </div>

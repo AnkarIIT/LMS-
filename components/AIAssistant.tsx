@@ -25,9 +25,9 @@ interface AIAssistantProps {
 
 const AIAssistant: React.FC<AIAssistantProps> = ({ resources, members, logs, activeStudent }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { 
-      role: 'assistant', 
-      content: `Namaste${activeStudent ? ` ${activeStudent.name.split(' ')[0]}` : ''}! I am Vidya AI. How can I assist with your studies today? I have access to your progress reports and our digital library vault.` 
+    {
+      role: 'assistant',
+      content: `Namaste${activeStudent ? ` ${activeStudent.name.split(' ')[0]}` : ''}! I am Vidya AI. How can I assist with your studies today? I have access to your progress reports and our digital library vault.`
     }
   ]);
   const [input, setInput] = useState('');
@@ -54,11 +54,11 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ resources, members, logs, act
     try {
       const result: GenerateContentResponse = await chatSession.sendMessage({ message: messageToSend });
       const responseText = result.text || "I'm sorry, I couldn't process that request.";
-      
+
       // Extract grounding links from metadata if available
       const groundingChunks = result.candidates?.[0]?.groundingMetadata?.groundingChunks;
       const sources: GroundingLink[] = [];
-      
+
       if (groundingChunks) {
         groundingChunks.forEach((chunk: any) => {
           if (chunk.web && chunk.web.uri && chunk.web.title) {
@@ -70,16 +70,16 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ resources, members, logs, act
         });
       }
 
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
+      setMessages(prev => [...prev, {
+        role: 'assistant',
         content: responseText,
         sources: sources.length > 0 ? sources : undefined
       }]);
     } catch (error) {
       console.error("Vidya AI Error:", error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: "Vidya Server encountered a minor syncing error while searching. Please try again in a moment." 
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "Vidya Server encountered a minor syncing error while searching. Please try again in a moment."
       }]);
     } finally {
       setIsLoading(false);
@@ -97,11 +97,11 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ resources, members, logs, act
             <p className="text-[10px] font-black text-[#84cc16] uppercase tracking-[0.2em] mb-2">Sources & References</p>
             <div className="flex flex-wrap gap-2">
               {msg.sources.map((source, i) => (
-                <a 
-                  key={i} 
-                  href={source.uri} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  key={i}
+                  href={source.uri}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-lg text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-all flex items-center space-x-1"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -121,8 +121,9 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ resources, members, logs, act
     <div className="max-w-5xl mx-auto h-[750px] bg-white dark:bg-slate-800 rounded-[4rem] border border-white dark:border-slate-700 shadow-3xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-700">
       <div className="p-10 bg-slate-900 text-white flex justify-between items-center shadow-xl">
         <div className="flex items-center space-x-6">
-          <div className="p-4 bg-[#84cc16] rounded-[1.5rem] shadow-xl shadow-[#84cc16]/20">
-            <Icons.AI className="w-8 h-8 text-slate-900" />
+          <div className="p-4 bg-[#84cc16] rounded-[1.5rem] shadow-xl shadow-[#84cc16]/20 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+            <Icons.AI className="w-8 h-8 text-slate-900 animate-pulse" />
           </div>
           <div>
             <h3 className="font-black text-2xl tracking-tighter leading-none mb-1 uppercase">Vidya AI</h3>
@@ -132,7 +133,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ resources, members, logs, act
           </div>
         </div>
         <div className="bg-white/10 px-6 py-2.5 rounded-full border border-white/20 backdrop-blur-xl hidden sm:block">
-           <span className="text-[10px] font-black uppercase tracking-widest text-[#84cc16]">Context-Aware Search</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#84cc16]">Context-Aware Search</span>
         </div>
       </div>
 
@@ -146,14 +147,14 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ resources, members, logs, act
         ))}
         {isLoading && (
           <div className="flex justify-start">
-             <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] rounded-tl-none border border-slate-100 dark:border-slate-700 shadow-xl flex items-center space-x-4">
-               <div className="flex space-x-2">
-                  <div className="w-2.5 h-2.5 bg-[#84cc16] rounded-full animate-bounce"></div>
-                  <div className="w-2.5 h-2.5 bg-[#84cc16] rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                  <div className="w-2.5 h-2.5 bg-[#84cc16] rounded-full animate-bounce [animation-delay:0.4s]"></div>
-               </div>
-               <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Personalizing your help...</span>
-             </div>
+            <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] rounded-tl-none border border-slate-100 dark:border-slate-700 shadow-xl flex items-center space-x-4">
+              <div className="flex space-x-2">
+                <div className="w-2.5 h-2.5 bg-[#84cc16] rounded-full animate-bounce"></div>
+                <div className="w-2.5 h-2.5 bg-[#84cc16] rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                <div className="w-2.5 h-2.5 bg-[#84cc16] rounded-full animate-bounce [animation-delay:0.4s]"></div>
+              </div>
+              <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Personalizing your help...</span>
+            </div>
           </div>
         )}
       </div>
