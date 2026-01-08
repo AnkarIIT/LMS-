@@ -1,12 +1,35 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 📚 Vidya Library Management System (LMS)
 
-# Run and deploy your AI Studio app
+> **Motto:** *Vidya Library • Mohanpur Bazar*
 
-This contains everything you need to run your app locally.
+A modern, cloud-integrated Library Management System designed to streamline registry operations and provide students with a comprehensive digital academic hub. Built with a focus on efficiency, accessibility, and AI-driven assistance.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1vBqlyfFBhThOskVoNYS_gJnL93p7q5iy
+---
+
+## 🚀 Features
+
+### 🛠️ Registry Node (Admin)
+The central control center for library management.
+- **Registry Overview**: Real-time dashboard with key metrics and statistics.
+- **Live Entry Log**: Track student check-ins and check-outs in real-time.
+- **Asset Library**: Manage books, PDFs, and academic resources.
+- **Student Roster**: Full digital database of all registered library students.
+- **Archive Console**: Securely store and retrieve historical records.
+- **Performance Hub**: Monitor and analyze student growth and attendance.
+- **Floor Matrix**: Visual representation and management of seating arrangements.
+- **Replacement Hub**: Process and review student seat/batch change requests.
+- **Financials**: Integrated fee tracking and payment management.
+- **Vidya AI**: Advanced AI assistant powered by Gemini for administrative tasks.
+
+### 🎓 Student Hub
+A dedicated interface for library members to manage their academic life.
+- **Home Board**: Personalized dashboard with notices and personal stats.
+- **Academic Vault**: Access shared library resources and study materials.
+- **Modifications**: Submit and track requests for seat or batch changes.
+- **My Growth**: Visualize personal performance and progress.
+- **Attendance**: Keep track of daily library visits.
+- **Study Assistant**: 24/7 AI-powered academic support.
+- **Community Chat**: Real-time communication with library administration.
 
 ## Run Locally
 
